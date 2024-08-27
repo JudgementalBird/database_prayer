@@ -4,7 +4,6 @@ use dialoguer::Input;
 use tokio::sync::Mutex;
 use rusqlite::{Connection, Error};
 
-
 pub struct SLDatabase {
 	pub connection: Arc<Mutex<Connection>>
 }
@@ -73,6 +72,7 @@ async fn main() -> Result<(), Error> {
             .unwrap();
 
         println!("Querying {} !",query_timestamp);
+
         let res = connection.query_row(
             "SELECT * FROM withdrawals WHERE received_at = ?",
             [query_timestamp],
@@ -80,37 +80,40 @@ async fn main() -> Result<(), Error> {
                 let fish_data: Vec<u8> = row.get(2).unwrap();
                 let fish_data: Vec<u32> = bincode::deserialize(&fish_data).unwrap();
 
-                println!("{} {} {}","-".repeat(40).magenta(), "Success".magenta(), "-".repeat(100).magenta());
-
+                println!(
+                    "{} {} {}",
+                    "-".repeat(40).magenta(),
+                    "Success".magenta(),
+                    "-".repeat(100).magenta());
                 
-                let mut data_string = String::from("[");
-                let mut index_string = String::from("[");
-                for (k,v) in fish_data.iter().enumerate() {
-                    
-                    index_string.push_str(&format!("{}, ",&k.to_string().yellow()));
-                    
-                    let to_use;
-                    if *v == 0 {
-                        to_use = Color::Yellow;
-                    } else {
-                        to_use = Color::Green;
-                    }
-                    if ((k/10) > 0) && !((v/10) > 0) {
-                        data_string.push_str(&format!("{}{}, ",0.to_string().color(to_use),&v.to_string().color(to_use)));
-                    } else {
-                        data_string.push_str(&format!("{}, ",&v.to_string().color(to_use)));
-                    };
-                }
-                index_string.pop();
-                index_string.pop();
-                index_string.push(']');
-                data_string.pop();
-                data_string.pop();
-                data_string.push(']');
+                let (data_string, index_string) = fish_data.iter()
+                    .enumerate()
+                    .map(|(species, &quantity)| {
+                        let to_use = match quantity {
+                            0 => Color::Yellow,
+                            _ => Color::Green
+                        };
+                        let data = if species >= 10 && quantity < 10 {
+                            format!("{}, ",
+                                format!("0{}", quantity).color(to_use)
+                            )
+                        } else {
+                            format!("{}, ",quantity.to_string().color(to_use))
+                        };
 
-                println!(" Indexes: {}",index_string);
-                println!("Vec<u32>: {}",data_string);
-                println!("Names: {}",to_display_string(&fish_data).unwrap().green());
+                        let index = format!("{}, ",species.to_string().yellow());
+
+                        (data,index)
+                    })
+                    .fold((String::new(), String::new()), |(mut data_acc, mut index_acc), (data, index)| {
+                        data_acc.push_str(&data);
+                        index_acc.push_str(&index);
+                        (data_acc, index_acc)
+                    });
+                
+                    println!(" Indexes: {}", index_string);
+                    println!("Vec<u32>: {}", data_string);
+                    println!("   Names: {}", to_display_string(&fish_data).unwrap().green());
                 Ok(())
             });
         
