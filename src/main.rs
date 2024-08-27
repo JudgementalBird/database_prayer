@@ -4,7 +4,7 @@ use dialoguer::Input;
 use tokio::sync::Mutex;
 use rusqlite::{Connection, Error};
 
-pub struct SLDatabase {
+struct SLDatabase {
 	pub connection: Arc<Mutex<Connection>>
 }
 impl SLDatabase {
@@ -32,14 +32,14 @@ impl SLDatabase {
 	}
 }
 
-pub fn name_from_array_index(species: usize) -> Result<String, String> {
+fn name_from_array_index(species: usize) -> Result<String, String> {
 	const SPECIES_NAMES: &[&str] = &["Anchovie","Anglerfish","Arctic Char","Ballan Lizardfish","Ballan Wrasse","Barreleye Fish","Black Bream","Black Dragonfish","Clown Fish","Cod","Dolphinfish","Gulper Eel","Haddock","Hake","Herring","John Dory","Labrus","Lanternfish","Mackerel","Midshipman","Perch","Pike","Pinecone Fish","Pollock","Red Mullet","Rockfish","Sablefish","Salmon","Sardine","Scad","Sea Bream","Sea Halibut","Sea Piranha","Seabass","Slimehead","Snapper","Snapper (Gold)","Snook","Spadefish","Trout","Tubeshoulders Fish","Viperfish","Yellowfin Tuna","Blue Crab","Brown Box Crab","Coconut Crab","Dungeness Crab","Furry Lobster","Homarus Americanus","Homarus Gammarus","Horseshoe Crab","Jasus Edwardsii","Jasus Lalandii","Jonah Crab","King Crab","Mud Crab","Munida Lobster","Ornate Rock Lobster","Panulirus Interruptus","Red King Crab","Reef Lobster","Slipper Lobster","Snow Crab","Southern Rock Lobster","Spider Crab","Spiny Lobster","Stone Crab"];
 
 	SPECIES_NAMES.get(species)
 		.map(|name| name.to_string())
 		.ok_or_else(|| String::from("Error! Sea creature {}"))
 }
-pub fn to_display_string(data: &Vec<u32>) -> Result<String, String> {
+fn to_display_string(data: &Vec<u32>) -> Result<String, String> {
 	let mut result = String::new();
 	
 	for (species, quantity) in data.iter().enumerate() {
